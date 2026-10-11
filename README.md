@@ -1,70 +1,95 @@
 # rpi-ros2-grasp-pipeline
 
-Raspberry Pi edge inference feeding a simulated robot arm grasp pipeline (ROS2 + ONNX).
+树莓派端侧感知 + 仿真机械臂抓取的半实物流水线。真机负责"看"，仿真负责"抓"。
+
+> **当前状态**：环境搭建中（2026-10）。Ubuntu 24.04 安装ing，ROS2 尚未跑通。
+> **本周目标**：把 PC + 树莓派 5 的 ROS2 双向组网跑通。
 
 <!-- TODO: replace with a 5-second demo gif. Put the file at docs/demo.gif -->
+<!-- 这个动图是本项目最重要的一个文件。有它，README 才叫项目；没它，只是想法。 -->
 
 ![demo](docs/demo.gif)
 
-## What it does
+## 它解决什么问题
 
-- **Perception** — a phone streams video over the network, the Raspberry Pi pulls the stream and runs a lightweight detector locally (edge inference, on-device).
-- **Decision** — the detected target pose is published as a ROS2 topic.
-- **Execution** — a simulated robot arm on the PC picks up the pose and completes an approach-grasp-lift-place cycle in Gazebo.
+边缘设备上跑模型最大的矛盾是：**算力不够，但又不能什么都往云上扔**（延迟、带宽、隐私）。
 
-This is a hardware-in-the-loop style setup: the real device does perception, the simulation does execution.
+所以这条链路这样切：
 
-## Hardware
+| 环节 | 在哪跑 | 干什么 |
+|------|--------|--------|
+| 感知 | 树莓派（真机，端侧） | 拉手机推过来的视频流，本地跑 ONNX 检测模型，不上传原始画面 |
+| 决策 | 树莓派 → PC | 把检测到的目标位姿作为 ROS2 topic 发布出去 |
+| 执行 | PC（Gazebo 仿真） | 机械臂订阅位姿，走完 接近 → 抓取 → 抬起 → 放置 全流程 |
 
-| Role | Device |
-|------|--------|
-| Robot-side compute | Raspberry Pi <!-- TODO: model, e.g. 4B 4GB / 5 8GB --> |
-| Camera source | Phone streaming over network |
-| Simulation host | PC running Gazebo |
-| Monitoring terminal | Tablet / PC browser |
+**为什么是半实物而不是纯仿真**：纯仿真等于没有硬件经验，面试官一眼看穿；真机械臂买不起也没场地。感知侧是真的硬件在承受算力、发热、延迟——这些恰恰是边缘部署真正的难点。执行侧用仿真，是因为本项目的重点在**感知到控制的链路**，不在机械臂本体。
 
-## Environment
+## 硬件
 
-- Ubuntu 22.04 (Pi) / Ubuntu <!-- TODO -->  (PC)
-- ROS2 <!-- TODO: Humble / Jazzy -->
-- Python 3.10
-- ONNX Runtime <!-- TODO: version -->
+| 角色 | 设备 |
+|------|------|
+| 端侧推理 | Raspberry Pi 5（8GB） |
+| 图像源 | 手机（网络摄像头推流） |
+| 仿真主机 | 台式机（i9-14900 + RTX 5060）跑 Gazebo |
+| 开发/可视 | 第二台电脑（RViz） |
+| 监控终端 | 平板 / 浏览器 |
 
-## Results
+## 环境（已锁定，不再改）
 
-<!-- TODO: fill in real measured numbers. These are the numbers interviewers ask about. -->
+| | 系统 | ROS2 |
+|---|------|------|
+| 树莓派 5 | Ubuntu 24.04 LTS | **Jazzy** |
+| 仿真 PC | Ubuntu 24.04 LTS | **Jazzy** |
 
-| Metric | Value |
-|--------|-------|
-| Inference FPS (FP32) | <!-- TODO --> |
-| Inference FPS (INT8) | <!-- TODO --> |
-| Single-frame latency | <!-- TODO --> ms |
-| CPU usage | <!-- TODO --> % |
-| Temperature | <!-- TODO --> °C |
-| Grasp success rate (sim, with domain randomization) | <!-- TODO --> % |
+选 Jazzy 是因为它是 Ubuntu 24.04 的官方配套版本（Humble 在 24.04 上需要源码编译，坑多）。两台机器版本必须一致，否则 DDS 通信会有各种诡异问题。
 
-## How to run
+其余：Python 3.12 / ONNX Runtime（版本待定，装完补）
 
-<!-- TODO: write these after you actually run it once end to end. Someone else must be able to reproduce it. -->
+## 结果
 
-1. Install ROS2 and dependencies
-2. Start the camera stream on the phone
-3. Launch the perception node on the Raspberry Pi
-4. Launch the simulation and the grasp planner on the PC
+**待填。完整指标表和测量方法见 [`docs/01-metrics.md`](docs/01-metrics.md)。**
 
-## Known issues
+| 指标 | 值 |
+|------|-----|
+| 推理 FPS（FP32） | 待测 |
+| 推理 FPS（INT8） | 待测（P1） |
+| 单帧端到端延迟 | 待测 |
+| CPU 占用 | 待测 |
+| 满载温度 | 待测 |
+| 抓取成功率（仿真 + 域随机化，≥50 次） | 待测（P2） |
 
-Honest limits of this project:
+数字没测出来之前，一律写"待测"，**不许填估算值**。
 
-- Results are measured in simulation, not on a real arm. The sim-to-real gap is not yet characterized.
-- Simulated joint delay and camera noise are injected to partially cover the reality gap, but friction and calibration errors are not modelled.
-- <!-- TODO: anything else you know is fragile -->
+## 怎么跑
 
-## Structure
+环境还没搭完，跑通之后立刻补这一节。判断标准：一个陌生人照着这份说明能复现出来。
+
+1. 装 ROS2 和依赖
+2. 手机开启网络推流
+3. 树莓派上启动感知节点
+4. PC 上启动 Gazebo 仿真和抓取规划
+
+## 已知局限（诚实版）
+
+- 结果来自仿真，不是真机械臂。**sim-to-real 的差距没有被量化**，这一点面试时会被追问，不要装作没有。
+- 仿真里注入了关节延迟和摄像头噪声，但摩擦、标定误差没有建模。
+- 目前只做单目标、固定光照。
+
+## 目录
 
 ```
 .
-├── docs/            # demo gif, figures
-├── ros2_ws/src/     # ROS2 packages (perception, bridge, sim)
-└── models/          # exported ONNX models
+├── docs/
+│   ├── 00-roadmap.md      # 到 2028-02 拿实习的分阶段路线
+│   ├── 01-metrics.md      # 指标表 + 每个数字怎么测
+│   ├── 02-weekly-log.md   # 周记模板（现象→根因→解法）
+│   ├── 03-cli-drill.md    # Linux 命令清单
+│   └── jd/                # 真实岗位 JD 与能力差距分析
+├── ros2_ws/src/           # ROS2 包（感知 / 桥接 / 仿真）
+└── models/                # 导出的 ONNX 模型
 ```
+
+## 不做的事
+
+- 不做导航、不做 SLAM —— 烂大街，且本项目是**操作类**任务
+- 不中途换技术栈
