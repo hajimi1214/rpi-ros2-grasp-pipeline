@@ -5,10 +5,11 @@
 > **当前状态**：环境搭建中（2026-10）。Ubuntu 24.04 安装ing，ROS2 尚未跑通。
 > **本周目标**：把 PC + 树莓派 5 的 ROS2 双向组网跑通。
 
-<!-- TODO: replace with a 5-second demo gif. Put the file at docs/demo.gif -->
+<!-- TODO: 等 W3 跑通闭环后做这一步 —— 录 5 秒屏存成 docs/demo.gif，然后把下面两行注释的解掉 -->
 <!-- 这个动图是本项目最重要的一个文件。有它，README 才叫项目；没它，只是想法。 -->
+<!-- ![demo](docs/demo.gif) -->
 
-![demo](docs/demo.gif)
+> 📷 **演示动图待补**。当前链路尚未跑通，暂不放占位图——一个碎掉的图标比没有图更减分。
 
 ## 它解决什么问题
 
