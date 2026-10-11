@@ -84,6 +84,7 @@
 │   ├── 01-metrics.md      # 指标表 + 每个数字怎么测
 │   ├── 02-weekly-log.md   # 周记模板（现象→根因→解法）
 │   ├── 03-cli-drill.md    # Linux 命令清单
+│   ├── 04-info-sources.md # 信息源规则：三源交叉，信踩坑的不信官方的
 │   └── jd/                # 真实岗位 JD 与能力差距分析
 ├── ros2_ws/src/           # ROS2 包（感知 / 桥接 / 仿真）
 └── models/                # 导出的 ONNX 模型
